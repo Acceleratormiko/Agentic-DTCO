@@ -1,0 +1,9 @@
+* NAND2V1_90S9T20R for VA/NN: same topology as CDL, d/s swapped where needed.
+* CDL: X5(9 A2 VSS) X6(ZN A1 9) X7(ZN A2 VDD) X8(VDD A1 ZN VDD).
+* X5,X6,X7 OK. X8: when A1 low, current VDD->ZN; need I(ZN,VDD)<0 so d=ZN s=VDD -> swap to ZN A1 VDD VDD.
+.SUBCKT NAND2V1_90S9T20R A1 A2 VDD VNW VPW VSS ZN
+X5 9 A2 VSS VSS mos14n
+X6 ZN A1 9 VSS mos14n
+X7 ZN A2 VDD VDD mos14p
+X8 ZN A1 VDD VDD mos14p
+.ENDS NAND2V1_90S9T20R
