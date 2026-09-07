@@ -1,0 +1,175 @@
+tools:
+  # Tool 1: TCAD verified metrics (one baseline or two concurrent candidates)
+  - class_name: "internbootcamp.edaclaw.DTCO.tools.tcad_tool_batch.BatchTCADTool"
+    config:
+      type: "native"
+      semaphore_limit: 3
+      max_candidates: 3
+      device_type: "both"
+      model: "s1-qwen14b-30k-baseline"
+      base_url: "http://100.101.23.77:2025/v1"
+      api_key: "api_key"
+      temperature: 0.0
+      base_work_dir_parent: "/home/hongx/myfiles/Agent_DTCO/"
+    tool_schema:
+      type: "function"
+      function:
+        name: "DTCO_tcad_simulate"
+        description: |
+          Run one or two independent Sentaurus TCAD candidates and return all
+          results after every candidate has completed or failed.
+
+          Submit one candidate for the initial baseline. If it does not meet
+          all TCAD requirements, submit two physically different optimization
+          candidates in the same call so that they run concurrently.
+
+          Each successful candidate returns its original TCAD result under
+          candidates[i].metrics. For device_type="both", read:
+          - candidates[i].metrics.work_dir
+          - candidates[i].metrics.ntype_result.metrics
+          - candidates[i].metrics.ptype_result.metrics
+        parameters:
+          type: "object"
+          properties:
+            candidates:
+              type: "array"
+              description: |
+                A non-empty list containing at most two candidates. The Python
+                tool enforces this limit using config.max_candidates.
+              items:
+                type: "object"
+                properties:
+                  candidate_id:
+                    type: "string"
+                    description: "Unique candidate name, for example baseline or reduce_ioff."
+                  optimization_rationale:
+                    type: "string"
+                    description: "Physical reason for this optimization direction."
+                  device_type:
+                    type: "string"
+                    description: "n-type, p-type, or both. Use both for normal DTCO."
+                  ntype_variables:
+                    type: "object"
+                    description: "Complete N-type TCAD design variables."
+                  ptype_variables:
+                    type: "object"
+                    description: "Complete P-type TCAD design variables."
+                  ntype_work_function:
+                    type: "number"
+                    description: "N-type gate work function in eV."
+                  ptype_work_function:
+                    type: "number"
+                    description: "P-type gate work function in eV."
+                required:
+                  - candidate_id
+                  - device_type
+          required:
+            - candidates
+
+  # Tool 2: Compact model build (parallel n/p multi-curve + dataset + NN + VA export)
+  - class_name: "internbootcamp.edaclaw.DTCO.tools.compact_model_tool.CompactModelTool"
+    config:
+      type: "native"
+      semaphore: 1
+      base_dir: "project://internbootcamp/edaclaw/DTCO/configs/nnmodel_cmd"
+      csv_filenames:
+        - "n_iv.csv"
+        - "p_iv.csv"
+        - "n_cv.csv"
+        - "p_cv.csv"
+    tool_schema:
+      type: "function"
+      function:
+        name: "DTCO_compact_train"
+        description: |
+          Build compact NN model from TCAD work_dir.
+          Internal workflow:
+          1) Copy IV/CV multi-curve Sentaurus cmd templates for ntype/ptype
+          2) Run ntype/ptype multi-curve simulations in parallel
+          3) Build NN training dataset (IV/CV CSVs)
+          4) Train NN compact models and export Verilog-A
+
+          Output fields:
+          - work_dir
+          - csv: {n_iv_csv, p_iv_csv, n_cv_csv, p_cv_csv}
+          - models_dir
+          - va: {n_va_path, p_va_path}
+        parameters:
+          type: "object"
+          properties:
+            work_dir:
+              type: "string"
+              description: |
+                Work directory from TCAD tool, must include:
+                - work_dir/ntype
+                - work_dir/ptype
+          required:
+            - work_dir
+
+  # Tool 3: HSPICE verified simulation
+  - class_name: "internbootcamp.edaclaw.DTCO.tools.hspice_tool.HspiceTool"
+    config:
+      type: "native"
+      semaphore: 9
+      base_dir: "project://internbootcamp/edaclaw/DTCO/configs/circuit"
+      circuit_types:
+        - "INV"
+        - "NAND"
+        - "AND"
+        - "XOR"
+        - "BUF"
+        - "NOR"
+        - "OR"
+        - "XNOR"
+        - "MAC4bit"
+      circuit_ratios:
+        - 1.0
+        - 1.0
+        - 1.0
+        - 1.0
+        - 1.0
+        - 1.0
+        - 1.0
+        - 1.0
+        - 1.0
+    tool_schema:
+      type: "function"
+      function:
+        name: "DTCO_hspice_sim"
+        description: |
+          Perform HSPICE verified simulation with compact-model VA files.
+          This tool will:
+          - Copy circuit templates from config.base_dir to work_dir/<circuit_type>/
+          - Copy CompactModelTool VA files into each circuit directory
+          - Copy hard-coded wrapper include file (base_dir/va_model_wrapper_new.inc) into each circuit directory
+          - Patch VDD/CL/slew in run_hspice.sp
+          - Run HSPICE for configured circuit types
+          - Parse .mt0 metrics and return verified delay/power summary
+        parameters:
+          type: "object"
+          properties:
+            vdd:
+              type: "number"
+              description: "Supply voltage for .param VDD in run_hspice.sp."
+            cl:
+              type: "number"
+              description: "Load capacitance for .param CL in run_hspice.sp."
+            slew:
+              type: "number"
+              description: "Input slew for .param slew in run_hspice.sp."
+            ntype_va_path:
+              type: "string"
+              description: "Path to n-type VA file from CompactModelTool output (va.n_va_path)."
+            ptype_va_path:
+              type: "string"
+              description: "Path to p-type VA file from CompactModelTool output (va.p_va_path)."
+            work_dir:
+              type: "string"
+              description: "Same work_dir used by previous tools; target dir to stage verified HSPICE runs."
+          required:
+            - vdd
+            - cl
+            - slew
+            - ntype_va_path
+            - ptype_va_path
+            - work_dir

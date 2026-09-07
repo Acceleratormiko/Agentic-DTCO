@@ -1,0 +1,90 @@
+instruction_generators:
+  basic_config:
+    config:
+      process_type: "finfet_7nm"
+      initial_variables:
+        Lg: [0.014, 0.028]
+        Lext: [0.004, 0.1]
+        Lsd: [0.01, 0.022]
+        Fh: [0.03, 0.06]
+        Fwt: [0.005, 0.009]
+        theta: [0.5, 4.0]
+        ToxLK: [5.00e-04, 1.50e-03]
+        ToxHK: [1.00e-03, 1.50e-03]
+        SD_Doping: [6e19, 6e21]
+        SDE_Doping: [6e17, 6e20]
+        C_Doping: [1e16, 1e18]
+      targets:
+        Ion_target: 6.0e-4
+        Ioff_target: 1.3e-8
+        SS_target: 100
+        delay_scale_s: 4.5e-11 # prompt里会以delay_scale_s * 0.7 作为目标值，reward会以delay_scale_s作为0.6分delay分数基准
+        power_scale_W: 2.7e-6 # prompt里会以power_scale_W * 0.7 作为目标值，reward会以power_scale_W作为0.6分power分数基准
+      seed: 42
+      prompt_template_path: "project://internbootcamp/edaclaw/DTCO/configs/prompt_templates/base.yaml"
+      enable_fix_params: False
+      fix_params_list: []
+    tool_config_path: "project://internbootcamp/edaclaw/DTCO/configs/tool_configs/base.yaml"
+    generation_ratio: 1
+
+  basic_with_easy_tcad_range_config:
+    config:
+      process_type: "finfet_7nm"
+      initial_variables:
+        Lg: [0.014, 0.028]
+        Lext: [0.004, 0.1]
+        Lsd: [0.01, 0.022]
+        Fh: [0.03, 0.06]
+        Fwt: [0.005, 0.009]
+        theta: [0.5, 4.0]
+        ToxLK: [5.00e-04, 1.50e-03]
+        ToxHK: [1.00e-03, 1.50e-03]
+        SD_Doping: [6e19, 6e21]
+        SDE_Doping: [6e17, 6e20]
+        C_Doping: [1e16, 1e18]
+      targets:
+        Ion_target: 3.0e-4
+        Ioff_target: 2.6e-8
+        SS_target: 200
+        delay_scale_s: 4.5e-11 # prompt里会以delay_scale_s * 0.7 作为目标值，reward会以delay_scale_s作为0.6分delay分数基准
+        power_scale_W: 2.7e-6 # prompt里会以power_scale_W * 0.7 作为目标值，reward会以power_scale_W作为0.6分power分数基准
+      seed: 42
+      prompt_template_path: "project://internbootcamp/edaclaw/DTCO/configs/prompt_templates/base.yaml"
+      enable_fix_params: False
+      fix_params_list: []
+    tool_config_path: "project://internbootcamp/edaclaw/DTCO/configs/tool_configs/base.yaml"
+    generation_ratio: 1
+
+  easy_config:
+    config:
+      process_type: "finfet_7nm"
+      initial_variables:
+        Lg: [0.021, 0.025]
+        Lext: [0.004, 0.008]
+        Lsd: [0.011, 0.015]
+        Fh: [0.035, 0.039]
+        Fwt: [0.008, 0.009]
+        theta: [3.60, 3.64]
+        ToxLK: [5.84e-04, 5.88e-04]
+        ToxHK: [1.19e-03, 1.23e-03]
+        SD_Doping: [6.86e19, 6.90e19]
+        SDE_Doping: [2.7e18, 2.9e20]
+        C_Doping: [1e17, 1.2e17]
+      targets:
+        Ion_target: 6.0e-4
+        Ioff_target: 1.3e-8
+        SS_target: 100
+        delay_scale_s: 4.5e-11 # prompt里会以delay_scale_s * 0.7 作为目标值，reward会以delay_scale_s作为0.6分delay分数基准
+        power_scale_W: 2.7e-6 # prompt里会以power_scale_W * 0.7 作为目标值，reward会以power_scale_W作为0.6分power分数基准
+      seed: 42
+      prompt_template_path: "project://internbootcamp/edaclaw/DTCO/configs/prompt_templates/base.yaml"
+      enable_fix_params: False
+      fix_params_list: []
+    tool_config_path: "project://internbootcamp/edaclaw/DTCO/configs/tool_configs/base.yaml"
+    generation_ratio: 1
+    
+global_config:
+  class_name: "internbootcamp.edaclaw.DTCO.dtco_instruction_generator.DTCOInstructionGenerator"
+  default_split_samples:
+    train: 10000
+    test: 100
