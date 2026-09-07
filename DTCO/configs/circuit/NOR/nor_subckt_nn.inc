@@ -1,9 +1,0 @@
-* NOR2V1_90S9T20R for VA/NN: same topology as CDL, d/s swapped where needed.
-* CDL: X5(ZN A2 VSS) X6(VSS A1 ZN) X7(9 A2 VDD) X8(ZN A1 9 VDD).
-* X5,X7,X8 OK. X6: when A1 high current ZN->VSS -> D=ZN S=VSS: swap to ZN A1 VSS VSS.
-.SUBCKT NOR2V1_90S9T20R A1 A2 VDD VNW VPW VSS ZN
-X5 ZN A2 VSS VSS mos14n
-X6 ZN A1 VSS VSS mos14n
-X7 9 A2 VDD VDD mos14p
-X8 ZN A1 9 VDD mos14p
-.ENDS NOR2V1_90S9T20R
